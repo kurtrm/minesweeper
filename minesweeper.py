@@ -44,11 +44,11 @@ def initialize_grid(height: int=13, width: int=15, mines: int=40) -> List[List[U
     if _valid_parameters(height, width, mines):
         grid = [[None] * width for _ in range(height)]
         for _ in range(mines):
-            x = random.randint(0, width)
-            y = random.randint(0, height)
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
             while grid[y][x] is not None:
-                x = random.randint(0, width)
-                y = random.randint(0, height)
+                x = random.randint(0, width - 1)
+                y = random.randint(0, height - 1)
             grid[y][x] = 0
 
     return grid
@@ -62,6 +62,7 @@ def _valid_parameters(height, width, mines) -> bool:
         raise ValueError('Height/width must be greater than or equal to 8.')
     elif height > 30 or width > 30:
         raise ValueError('Height/width must be less or equal to 30.')
-    elif mines / (height * width) > .20:
+    elif mines / (height * width) > .25:
         raise ValueError('Too many mines; total number of mines shall not exceed 20\% of available spaces.')
+
     return True
