@@ -2,6 +2,8 @@
 Raw implementation of a minesweeper
 game without the use of interfaces or coroutines.
 """
+import random
+
 from typing import List, Union
 
 # initialize gameboard with mines, randomly (both are input with restrictions)
@@ -39,9 +41,20 @@ def initialize_grid(height: int=13, width: int=15, mines: int=40) -> List[List[U
     Number of mines can't exceed 20% of the total number of spots in the grid.
     Again, this is arbitrary and can be modified at a later date.
     """
+    if _valid_parameters(height, width, mines):
+        grid = [[None] * width for _ in range(height)]
+        for _ in range(mines):
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            while grid[y][x] is not None:
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+            grid[y][x] = 0
+
+    return grid
 
 
-def _valid_grid(height, width, mines) -> bool:
+def _valid_parameters(height, width, mines) -> bool:
     """
     Validate the inputs into the initialize_grid function.
     """
