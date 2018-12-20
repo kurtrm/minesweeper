@@ -2,12 +2,10 @@
 Raw implementation of a minesweeper
 game without the use of interfaces or coroutines.
 """
-import os
 import random
 
 from collections import deque
 from typing import List, Union
-from queue import Queue
 
 # initialize gameboard with mines, randomly (both are input with restrictions)
 # count number of mines each cell is touching
@@ -232,8 +230,6 @@ def ascii_grid(show_grid: List[List[Union[None, int]]]) -> List[List[Union[None,
             top_string += ' '
     top_string += '\n'
     ascii_version = top_string + '\033[4m' + ascii_version + '\033[0m'
-    # top_string += ascii_version
-    # ascii_version = top_string
     for iy, row in enumerate(show_grid):
         if len(str(iy)) == 1:
             ascii_version += f'\n{iy} |'
@@ -305,7 +301,6 @@ def main():
     Main game loop.
     """
     y, x, mines = welcome_message()
-    # import pdb; pdb.set_trace()
     secret_grid = initialize_grid(x, y, mines)
     secret_grid = add_mine_counts(secret_grid)
     user_grid = [[0] * len(secret_grid[0]) for _ in range(len(secret_grid))]
@@ -338,15 +333,3 @@ if __name__ == '__main__':
         if play_again.lower() == 'n':
             playing = False
     print('Goodbye!')
-
-
-    # grid = initialize_grid()
-    # grid = add_mine_counts(grid)
-    # user_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
-    # user_grid = select_cell(grid, user_grid, 1, 3)
-    # if user_grid:
-    #     shown_grid = show_user_grid(grid, user_grid)
-    #     ascii_grid(grid)
-    #     ascii_grid(shown_grid)
-    # else:
-    #     print("you hit a mine and died")
