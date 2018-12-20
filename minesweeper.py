@@ -2,7 +2,9 @@
 Raw implementation of a minesweeper
 game without the use of interfaces or coroutines.
 """
+import os
 import random
+
 from collections import deque
 from typing import List, Union
 from queue import Queue
@@ -229,8 +231,9 @@ def ascii_grid(show_grid: List[List[Union[None, int]]]) -> List[List[Union[None,
         else:
             top_string += ' '
     top_string += '\n'
-    top_string += ascii_version
-    ascii_version = top_string
+    ascii_version = top_string + '\033[4m' + ascii_version + '\033[0m'
+    # top_string += ascii_version
+    # ascii_version = top_string
     for iy, row in enumerate(show_grid):
         if len(str(iy)) == 1:
             ascii_version += f'\n{iy} |'
@@ -247,15 +250,21 @@ def ascii_grid(show_grid: List[List[Union[None, int]]]) -> List[List[Union[None,
                     pass
                 ascii_version += str(element)
                 ascii_version += '\033[0m'
-                ascii_version += '|'
+                try:
+                    if show_grid[iy][ix+1] is not None:
+                        ascii_version += '|'
+                    else:
+                        ascii_version += ' '
+                except IndexError:
+                    pass
             else:
                 ascii_version += '_|'
     print(ascii_version)
 
 
-def main():
+def welcome_message():
     """
-    Main game loop.
+    Prints a welcome message to the user and retrieves their valid inputs.
     """
     welcome = """
 Welcome to Terminal Minesweeper!
@@ -275,19 +284,62 @@ Game Difficulties
 
     print(welcome)
     print(difficulties)
-    height = ''
-    while not height.isdigit():
-        height = input('Height: ')
-        if height == '':
-            height = '13'
-        else:
-            height = input('Please enter a valid number: ')
+    height = input('Height: ')
+    while not (height.isdigit() or height == ''):
+        height = input('Please enter a valid number: ')
     width = input('Width: ')
+    while not (width.isdigit() or width == ''):
+        width = input('Please enter a valid number: ')
     mines = input('Number of mines: ')
+    while not (mines.isdigit() or mines == ''):
+        mines = input('Please enter a valid number: ')
+    height = 13 if height == '' else int(height)
+    width = 15 if width == '' else int(width)
+    mines = 40 if mines == '' else int(mines)
+
+    return height, width, mines
+
+
+def main():
+    """
+    Main game loop.
+    """
+    y, x, mines = welcome_message()
+    # import pdb; pdb.set_trace()
+    secret_grid = initialize_grid(x, y, mines)
+    secret_grid = add_mine_counts(secret_grid)
+    user_grid = [[0] * len(secret_grid[0]) for _ in range(len(secret_grid))]
+    while user_grid and sum(row.count(0) for row in user_grid) > mines:
+        shown_grid = show_user_grid(secret_grid, user_grid)
+        ascii_grid(shown_grid)
+        print('Select space to reveal (row, column) (e.g. 3, 6)')
+        sel_y, sel_x = input('Select: ').split(', ')
+        try:
+            user_grid = select_cell(secret_grid, user_grid, int(sel_x), int(sel_y))
+        except TypeError:
+            while not sel_y.isdigit() or not sel_x.isdigit(): # Need more checking of user input, else error
+                sel_y, sel_x = input('Please put in valid numbers: ')
+            user_grid = select_cell(secret_grid, user_grid, int(sel_x), int(sel_y))
+
+    return user_grid
 
 
 if __name__ == '__main__':
-    main()
+    playing = True
+    while playing:
+        grid = main()
+        if not grid:
+            print('You struck a mine and died.')
+        else:
+            print('You won! Great job!!')
+        play_again = input('Play again? (Y/n): ')
+        while play_again not in {'Y', 'y', 'n', 'N'}:
+            play_again = input('Play again? (Y/n): ')
+        if play_again.lower() == 'n':
+            playing = False
+    print('Goodbye!')
+
+
     # grid = initialize_grid()
     # grid = add_mine_counts(grid)
     # user_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
