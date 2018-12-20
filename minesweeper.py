@@ -67,8 +67,9 @@ def _valid_parameters(height, width, mines) -> bool:
         raise ValueError('Height/width must be less or equal to 30.')
     elif mines / (height * width) > .25:
         raise ValueError('Too many mines; total number of '
-                         'mines shall not exceed 20\% of available spaces.')
-
+                         'mines shall not exceed 20% of available spaces.')
+    elif mines <= 0:
+        raise ValueError('mines argument must be greater than 0')
     return True
 
 
@@ -106,11 +107,11 @@ def _count_mines(grid, x, y):
                          (x+1, y-1)]
 
     count = 0
-    for x, y in surrounding_cells:
-        if x < 0 or y < 0:
+    for dx, dy in surrounding_cells:
+        if dx < 0 or dy < 0:
             continue
         try:
-            count += 1 if grid[y][x] == 0 else 0
+            count += 1 if grid[dy][dx] == 0 else 0
         except IndexError:
             continue
 
