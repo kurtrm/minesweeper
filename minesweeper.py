@@ -3,7 +3,6 @@ Raw implementation of a minesweeper
 game without the use of interfaces or coroutines.
 """
 import random
-
 from typing import List, Union
 
 # initialize gameboard with mines, randomly (both are input with restrictions)
@@ -15,7 +14,9 @@ from typing import List, Union
 # logic determines if all cells have been revealed that aren't mines
 
 
-def initialize_grid(height: int=13, width: int=15, mines: int=40) -> List[List[Union[None, int]]]:
+def initialize_grid(height: int=13,
+                    width: int=15,
+                    mines: int=40) -> List[List[Union[None, int]]]:
     """
     https://dash.harvard.edu/bitstream/handle/1/14398552/BECERRA-SENIORTHESIS-2015.pdf?sequence=1
 
@@ -36,9 +37,11 @@ def initialize_grid(height: int=13, width: int=15, mines: int=40) -> List[List[U
     Returns
     -------
     A matrix consisting of a list of lists containing None or an integer
+    The grid has not been initialized with the mine counts, only None and
+    mines represented as zeros.
 
     For the time being, placing a min/max of height/width at 8/30, respectively.
-    Number of mines can't exceed 20% of the total number of spots in the grid.
+    Number of mines can't exceed 25% of the total number of spots in the grid.
     Again, this is arbitrary and can be modified at a later date.
     """
     if _valid_parameters(height, width, mines):
@@ -63,6 +66,52 @@ def _valid_parameters(height, width, mines) -> bool:
     elif height > 30 or width > 30:
         raise ValueError('Height/width must be less or equal to 30.')
     elif mines / (height * width) > .25:
-        raise ValueError('Too many mines; total number of mines shall not exceed 20\% of available spaces.')
+        raise ValueError('Too many mines; total number of '
+                         'mines shall not exceed 20\% of available spaces.')
 
     return True
+
+
+def add_mine_counts(grid: List[List[Union[None, int]]]) -> List[List[Union[None, int]]]:
+    """
+    This function counts how many mines are around a given cell
+    and sets that grid cell equal to that value.
+
+    Paramaters
+    ----------
+    grid -> list of lists of None and integers(0)
+
+    Returns
+    -------
+    grid -> list of lists of None and integers(0 - 8)
+    """
+    for iy, y in enumerate(grid):
+        for ix, x in enumerate(y):
+            if x is None:
+                grid[iy][ix] = _count_mines(grid, ix, iy)
+    return grid
+
+
+def _count_mines(grid, x, y):
+    """
+    Helper function to count mines around a given cell.
+    """
+    surrounding_cells = [(x, y-1),
+                         (x, y+1),
+                         (x-1, y+1),
+                         (x-1, y),
+                         (x-1, y-1),
+                         (x+1, y+1),
+                         (x+1, y),
+                         (x+1, y-1)]
+
+    count = 0
+    for x, y in surrounding_cells:
+        if x < 0 or y < 0:
+            continue
+        try:
+            count += 1 if grid[y][x] == 0 else 0
+        except IndexError:
+            continue
+
+    return count if count > 0 else None
