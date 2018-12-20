@@ -3,7 +3,9 @@ Raw implementation of a minesweeper
 game without the use of interfaces or coroutines.
 """
 import random
+from collections import deque
 from typing import List, Union
+from queue import Queue
 
 # initialize gameboard with mines, randomly (both are input with restrictions)
 # count number of mines each cell is touching
@@ -116,3 +118,98 @@ def _count_mines(grid, x, y):
             continue
 
     return count if count > 0 else None
+
+
+def select_cell(grid: List[List[Union[None, int]]],
+                user_grid: List[List[Union[None, int]]],
+                x: int,
+                y: int) -> List[List[Union[None, int]]]:
+    """
+    Determine action on the user_grid based on
+    the selected cell in the generated grid.
+
+    Parameters
+    ----------
+    grid: underlying matrix containing all mine locations.
+    user_grid: grid that the user sees, where cells have been selected.
+    x, y: column and row of selected cell
+
+    Returns
+    -------
+    user_grid: Altered version of user_grid based on action of
+    selected cell or False if a mine was tripped.
+    """
+    user_cell = user_grid[y][x]
+    grid_cell = grid[y][x]
+    if user_cell == 1:
+        return user_grid
+    if grid_cell == 0:
+        return False
+    if grid_cell is not None:
+        user_grid[y][x] = 1
+        return user_grid
+    else:
+        for nx, ny in _reveal_nones(grid, x, y):
+            user_grid[ny][nx] = 1
+    return user_grid
+
+
+def _reveal_nones(grid, x, y):
+    """
+    Return a list of all the cells that should be revealed.
+    """
+    reveal = []
+    que = deque([(x, y)])
+    seen = []
+    while que:
+        xi, yi = que.popleft()
+        surrounding_cells = [(xi, yi-1),
+                             (xi, yi+1),
+                             (xi-1, yi+1),
+                             (xi-1, yi),
+                             (xi-1, yi-1),
+                             (xi+1, yi+1),
+                             (xi+1, yi),
+                             (xi+1, yi-1)]
+        for dxi, dyi in surrounding_cells:
+            if dxi < 0 or dyi < 0:
+                continue
+            if (dxi, dyi) in seen:
+                continue
+            try:
+                if grid[dyi][dxi] is None:
+                    reveal.append((dxi, dyi))
+                    que.append((dxi, dyi))
+                elif grid[dyi][dxi] > 0:
+                    reveal.append((dxi, dyi))
+                else:
+                    return "Something is amiss"
+                seen.append((dxi, dyi))
+            except IndexError:
+                continue
+
+    return reveal
+
+
+def show_user_grid(grid: List[List[Union[None, int]]],
+                   user_grid: List[List[Union[None, int]]]) -> List[List[Union[None, int]]]:
+    """
+    Display to the user the board game by iterating
+    across the grid and user grid.
+    """
+    show_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
+    for yi, y in enumerate(grid):
+        for xi, x in enumerate(y):
+            if user_grid[yi][xi]:
+                show_grid[yi][xi] = str(grid[yi][xi])
+            else:
+                show_grid[yi][xi] = str(0)
+    return show_grid
+
+
+if __name__ == '__main__':
+    grid = initialize_grid()
+    grid = add_mine_counts(grid)
+    user_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
+    user_grid = select_cell(grid, user_grid, 3, 3)
+    print(show_user_grid(grid, user_grid))
