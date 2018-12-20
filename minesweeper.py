@@ -200,7 +200,6 @@ def show_user_grid(grid: List[List[Union[None, int]]],
     show_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
     for yi, y in enumerate(grid):
         for xi, x in enumerate(y):
-            # import pdb; pdb.set_trace()
             if user_grid[yi][xi]:
                 show_grid[yi][xi] = str(grid[yi][xi])
             else:
@@ -213,5 +212,4 @@ if __name__ == '__main__':
     grid = add_mine_counts(grid)
     user_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
     user_grid = select_cell(grid, user_grid, 3, 3)
-    import pdb; pdb.set_trace()
     print(show_user_grid(grid, user_grid))
