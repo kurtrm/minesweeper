@@ -149,12 +149,12 @@ def select_cell(grid: List[List[Union[None, int]]],
         user_cell[y][x] = grid_cell[y][x]
         return user_cell
     else:
-        for space in _reveal_none(grid, x, y):
+        for space in _reveal_nones(grid, x, y):
             user_grid[y][x] = 1
         return user_grid
 
 
-def _reveal_none(grid, x, y):
+def _reveal_nones(grid, x, y):
     """
     Return a list of all the cells that should be revealed.
     """
@@ -171,12 +171,17 @@ def _reveal_none(grid, x, y):
                              (xi+1, yi),
                              (xi+1, yi-1)]
         for dxi, dyi in surrounding_cells:
-            if grid[dyi][dxi] is None:
-                reveal.append((dxi, dyi))
-                que.append((dxi, dyi))
-            elif grid[dyi][dxi] > 0:
-                reveal.append((dxi, dyi))
-            else:
-                return "Something is amiss"
+            if dxi < 0 or dyi < 0:
+                continue
+            try:
+                if grid[dyi][dxi] is None:
+                    reveal.append((dxi, dyi))
+                    que.append((dxi, dyi))
+                elif grid[dyi][dxi] > 0:
+                    reveal.append((dxi, dyi))
+                else:
+                    return "Something is amiss"
+            except IndexError:
+                continue
 
     return reveal
