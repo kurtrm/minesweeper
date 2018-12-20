@@ -146,12 +146,12 @@ def select_cell(grid: List[List[Union[None, int]]],
     if grid_cell == 0:
         return False
     if grid_cell is not None:
-        user_cell[y][x] = grid_cell[y][x]
-        return user_cell
-    else:
-        for space in _reveal_nones(grid, x, y):
-            user_grid[y][x] = 1
+        user_grid[y][x] = 1
         return user_grid
+    else:
+        for nx, ny in _reveal_nones(grid, x, y):
+            user_grid[ny][nx] = 1
+    return user_grid
 
 
 def _reveal_nones(grid, x, y):
@@ -160,6 +160,7 @@ def _reveal_nones(grid, x, y):
     """
     reveal = []
     que = deque([(x, y)])
+    seen = []
     while que:
         xi, yi = que.popleft()
         surrounding_cells = [(xi, yi-1),
@@ -173,6 +174,8 @@ def _reveal_nones(grid, x, y):
         for dxi, dyi in surrounding_cells:
             if dxi < 0 or dyi < 0:
                 continue
+            if (dxi, dyi) in seen:
+                continue
             try:
                 if grid[dyi][dxi] is None:
                     reveal.append((dxi, dyi))
@@ -181,7 +184,34 @@ def _reveal_nones(grid, x, y):
                     reveal.append((dxi, dyi))
                 else:
                     return "Something is amiss"
+                seen.append((dxi, dyi))
             except IndexError:
                 continue
 
     return reveal
+
+
+def show_user_grid(grid: List[List[Union[None, int]]],
+                   user_grid: List[List[Union[None, int]]]) -> List[List[Union[None, int]]]:
+    """
+    Display to the user the board game by iterating
+    across the grid and user grid.
+    """
+    show_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
+    for yi, y in enumerate(grid):
+        for xi, x in enumerate(y):
+            # import pdb; pdb.set_trace()
+            if user_grid[yi][xi]:
+                show_grid[yi][xi] = str(grid[yi][xi])
+            else:
+                show_grid[yi][xi] = str(0)
+    return show_grid
+
+
+if __name__ == '__main__':
+    grid = initialize_grid()
+    grid = add_mine_counts(grid)
+    user_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
+    user_grid = select_cell(grid, user_grid, 3, 3)
+    import pdb; pdb.set_trace()
+    print(show_user_grid(grid, user_grid))
