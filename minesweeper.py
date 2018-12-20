@@ -3,7 +3,9 @@ Raw implementation of a minesweeper
 game without the use of interfaces or coroutines.
 """
 import random
+from collections import deque
 from typing import List, Union
+from queue import Queue
 
 # initialize gameboard with mines, randomly (both are input with restrictions)
 # count number of mines each cell is touching
@@ -147,5 +149,34 @@ def select_cell(grid: List[List[Union[None, int]]],
         user_cell[y][x] = grid_cell[y][x]
         return user_cell
     else:
-        pass
+        for space in _reveal_none(grid, x, y):
+            user_grid[y][x] = 1
+        return user_grid
 
+
+def _reveal_none(grid, x, y):
+    """
+    Return a list of all the cells that should be revealed.
+    """
+    reveal = []
+    que = deque([(x, y)])
+    while que:
+        xi, yi = que.popleft()
+        surrounding_cells = [(xi, yi-1),
+                             (xi, yi+1),
+                             (xi-1, yi+1),
+                             (xi-1, yi),
+                             (xi-1, yi-1),
+                             (xi+1, yi+1),
+                             (xi+1, yi),
+                             (xi+1, yi-1)]
+        for dxi, dyi in surrounding_cells:
+            if grid[dyi][dxi] is None:
+                reveal.append((dxi, dyi))
+                que.append((dxi, dyi))
+            elif grid[dyi][dxi] > 0:
+                reveal.append((dxi, dyi))
+            else:
+                return "Something is amiss"
+
+    return reveal
