@@ -116,3 +116,36 @@ def _count_mines(grid, x, y):
             continue
 
     return count if count > 0 else None
+
+
+def select_cell(grid: List[List[Union[None, int]]],
+                user_grid: List[List[Union[None, int]]],
+                x: int,
+                y: int) -> List[List[Union[None, int]]]:
+    """
+    Determine action on the user_grid based on
+    the selected cell in the generated grid.
+
+    Parameters
+    ----------
+    grid: underlying matrix containing all mine locations.
+    user_grid: grid that the user sees, where cells have been selected.
+    x, y: column and row of selected cell
+
+    Returns
+    -------
+    user_grid: Altered version of user_grid based on action of
+    selected cell or False if a mine was tripped.
+    """
+    user_cell = user_grid[y][x]
+    grid_cell = grid[y][x]
+    if user_cell == 1:
+        return user_grid
+    if grid_cell == 0:
+        return False
+    if grid_cell is not None:
+        user_cell[y][x] = grid_cell[y][x]
+        return user_cell
+    else:
+        pass
+
