@@ -3,9 +3,9 @@ Raw implementation of a minesweeper
 game without the use of interfaces or coroutines.
 """
 import random
+
 from collections import deque
 from typing import List, Union
-from queue import Queue
 
 # initialize gameboard with mines, randomly (both are input with restrictions)
 # count number of mines each cell is touching
@@ -201,15 +201,135 @@ def show_user_grid(grid: List[List[Union[None, int]]],
     for yi, y in enumerate(grid):
         for xi, x in enumerate(y):
             if user_grid[yi][xi]:
-                show_grid[yi][xi] = str(grid[yi][xi])
+                show_grid[yi][xi] = grid[yi][xi]
             else:
-                show_grid[yi][xi] = str(0)
+                show_grid[yi][xi] = 0
     return show_grid
 
 
+def ascii_grid(show_grid: List[List[Union[None, int]]]) -> List[List[Union[None, int]]]:
+    """
+    Show an ascii grid of the grid produced by the show_user_grid function.
+    """
+    height = len(show_grid)
+    width = len(show_grid[0])
+    ascii_version = '  '
+    for i in range(width):
+        stringy_i = str(i)
+        if len(stringy_i) > 1:
+            ascii_version += f' {stringy_i[-1]}'
+        else:
+            ascii_version += f' {stringy_i}'
+    place = 0
+    top_string = ''
+    for char in ascii_version:
+        if char == '0':
+            top_string += str(place)
+            place += 1
+        else:
+            top_string += ' '
+    top_string += '\n'
+    ascii_version = top_string + '\033[4m' + ascii_version + '\033[0m'
+    for iy, row in enumerate(show_grid):
+        if len(str(iy)) == 1:
+            ascii_version += f'\n{iy} |'
+        else:
+            ascii_version += f'\n{iy}|'
+        for ix, element in enumerate(row):
+            if element is None:
+                ascii_version += '  '
+            elif element > 0:
+                try:
+                    if show_grid[iy+1][ix] == 0 or show_grid[iy+1][ix] is not None:
+                        ascii_version += '\033[4m'
+                except IndexError:
+                    pass
+                ascii_version += str(element)
+                ascii_version += '\033[0m'
+                try:
+                    if show_grid[iy][ix+1] is not None:
+                        ascii_version += '|'
+                    else:
+                        ascii_version += ' '
+                except IndexError:
+                    pass
+            else:
+                ascii_version += '_|'
+    print(ascii_version)
+
+
+def welcome_message():
+    """
+    Prints a welcome message to the user and retrieves their valid inputs.
+    """
+    welcome = """
+Welcome to Terminal Minesweeper!
+
+First, please select the height, width, and the number of mines
+you'd like to play with. Below, you can find some general guidelines
+on how these parameters affect difficulty. If you don't put in a number,
+the game will default to intermediate."""
+
+    difficulties = """
+Game Difficulties
+------------
+- Beginner:     8x8 | 9x9 | 10x10, 10 mines
+- Intermediate: 13x15 - 16x16,     40 mines
+- Expert:       16x30(30x16),      99 mines
+"""
+
+    print(welcome)
+    print(difficulties)
+    height = input('Height: ')
+    while not (height.isdigit() or height == ''):
+        height = input('Please enter a valid number: ')
+    width = input('Width: ')
+    while not (width.isdigit() or width == ''):
+        width = input('Please enter a valid number: ')
+    mines = input('Number of mines: ')
+    while not (mines.isdigit() or mines == ''):
+        mines = input('Please enter a valid number: ')
+    height = 13 if height == '' else int(height)
+    width = 15 if width == '' else int(width)
+    mines = 40 if mines == '' else int(mines)
+
+    return height, width, mines
+
+
+def main():
+    """
+    Main game loop.
+    """
+    y, x, mines = welcome_message()
+    secret_grid = initialize_grid(x, y, mines)
+    secret_grid = add_mine_counts(secret_grid)
+    user_grid = [[0] * len(secret_grid[0]) for _ in range(len(secret_grid))]
+    while user_grid and sum(row.count(0) for row in user_grid) > mines:
+        shown_grid = show_user_grid(secret_grid, user_grid)
+        ascii_grid(shown_grid)
+        print('Select space to reveal (row, column) (e.g. 3, 6)')
+        sel_y, sel_x = input('Select: ').split(', ')
+        try:
+            user_grid = select_cell(secret_grid, user_grid, int(sel_x), int(sel_y))
+        except TypeError:
+            while not sel_y.isdigit() or not sel_x.isdigit(): # Need more checking of user input, else error
+                sel_y, sel_x = input('Please put in valid numbers: ')
+            user_grid = select_cell(secret_grid, user_grid, int(sel_x), int(sel_y))
+
+    return user_grid
+
+
 if __name__ == '__main__':
-    grid = initialize_grid()
-    grid = add_mine_counts(grid)
-    user_grid = [[0] * len(grid[0]) for _ in range(len(grid))]
-    user_grid = select_cell(grid, user_grid, 3, 3)
-    print(show_user_grid(grid, user_grid))
+    playing = True
+    while playing:
+        grid = main()
+        if not grid:
+            print('You struck a mine and died.')
+        else:
+            print('You won! Great job!!')
+        play_again = input('Play again? (Y/n): ')
+        while play_again not in {'Y', 'y', 'n', 'N'}:
+            play_again = input('Play again? (Y/n): ')
+        if play_again.lower() == 'n':
+            playing = False
+    print('Goodbye!')
