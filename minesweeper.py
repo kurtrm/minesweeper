@@ -46,15 +46,16 @@ def initialize_grid(height: int=13,
     Number of mines can't exceed 25% of the total number of spots in the grid.
     Again, this is arbitrary and can be modified at a later date.
     """
-    if _valid_parameters(height, width, mines):
-        grid = [[None] * width for _ in range(height)]
-        for _ in range(mines):
+    while not _valid_parameters(height, width, mines):
+        height, width, mines = get_input()
+    grid = [[None] * width for _ in range(height)]
+    for _ in range(mines):
+        x = random.randint(0, width - 1)
+        y = random.randint(0, height - 1)
+        while grid[y][x] is not None:
             x = random.randint(0, width - 1)
             y = random.randint(0, height - 1)
-            while grid[y][x] is not None:
-                x = random.randint(0, width - 1)
-                y = random.randint(0, height - 1)
-            grid[y][x] = 0
+        grid[y][x] = 0
 
     return grid
 
@@ -64,14 +65,18 @@ def _valid_parameters(height, width, mines) -> bool:
     Validate the inputs into the initialize_grid function.
     """
     if height < 8 or width < 8:
-        raise ValueError('Height/width must be greater than or equal to 8.')
+        print('Height/width must be greater than or equal to 8.')
+        return False
     elif height > 30 or width > 30:
-        raise ValueError('Height/width must be less or equal to 30.')
+        print('Height/width must be less or equal to 30.')
+        return False
     elif mines / (height * width) > .25:
-        raise ValueError('Too many mines; total number of '
-                         'mines shall not exceed 20% of available spaces.')
+        print('Too many mines; total number of '
+              'mines shall not exceed 20% of available spaces.')
+        return False
     elif mines <= 0:
-        raise ValueError('mines argument must be greater than 0')
+        print('mines argument must be greater than 0')
+        return False
     return True
 
 
@@ -258,6 +263,25 @@ def ascii_grid(show_grid: List[List[Union[None, int]]]) -> List[List[Union[None,
     print(ascii_version)
 
 
+def get_input():
+    """
+    """
+    height = input('Height: ')
+    while not (height.isdigit() or height == ''):
+        height = input('Please enter a valid number: ')
+    width = input('Width: ')
+    while not (width.isdigit() or width == ''):
+        width = input('Please enter a valid number: ')
+    mines = input('Number of mines: ')
+    while not (mines.isdigit() or mines == ''):
+        mines = input('Please enter a valid number: ')
+    height = 13 if height == '' else int(height)
+    width = 15 if width == '' else int(width)
+    mines = 40 if mines == '' else int(mines)
+
+    return height, width, mines
+
+
 def welcome_message():
     """
     Prints a welcome message to the user and retrieves their valid inputs.
@@ -280,20 +304,8 @@ Game Difficulties
 
     print(welcome)
     print(difficulties)
-    height = input('Height: ')
-    while not (height.isdigit() or height == ''):
-        height = input('Please enter a valid number: ')
-    width = input('Width: ')
-    while not (width.isdigit() or width == ''):
-        width = input('Please enter a valid number: ')
-    mines = input('Number of mines: ')
-    while not (mines.isdigit() or mines == ''):
-        mines = input('Please enter a valid number: ')
-    height = 13 if height == '' else int(height)
-    width = 15 if width == '' else int(width)
-    mines = 40 if mines == '' else int(mines)
 
-    return height, width, mines
+    return get_input()
 
 
 def main():
@@ -308,13 +320,20 @@ def main():
         shown_grid = show_user_grid(secret_grid, user_grid)
         ascii_grid(shown_grid)
         print('Select space to reveal (row, column) (e.g. 3, 6)')
-        sel_y, sel_x = input('Select: ').split(', ')
-        try:
-            user_grid = select_cell(secret_grid, user_grid, int(sel_x), int(sel_y))
-        except TypeError:
-            while not sel_y.isdigit() or not sel_x.isdigit(): # Need more checking of user input, else error
-                sel_y, sel_x = input('Please put in valid numbers: ')
-            user_grid = select_cell(secret_grid, user_grid, int(sel_x), int(sel_y))
+        x_and_y = input('Select: ').split(', ')
+        while True:
+            try:
+                sel_y, sel_x = x_and_y
+                sel_y, sel_x = int(sel_x), int(sel_y)
+                secret_grid[sel_y][sel_x]
+                break
+            except ValueError:
+                x_and_y = input('Please put in valid numbers: ').split(', ')
+            except TypeError:
+                x_and_y = input('Please put in valid numbers: ').split(', ')
+            except IndexError:
+                x_and_y = input('Please put in valid numbers within the grid: ').split(', ')
+        user_grid = select_cell(secret_grid, user_grid, sel_x, sel_y)
 
     return user_grid
 
