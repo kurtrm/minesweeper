@@ -9,11 +9,11 @@ def coroutine_primer(func):
     """
     Decorator that primes a coroutine when instantiated.
     """
-    @wraps
-    def wrapper(*args, **kwargs):
+    @wraps(func)
+    def wrap(*args, **kwargs):
         coro = func(*args, **kwargs)
-        coro.next()
+        next(coro)
 
         return coro
 
-    return wrapper
+    return wrap
