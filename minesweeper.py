@@ -216,7 +216,6 @@ def ascii_grid(show_grid: List[List[Union[None, int]]]) -> List[List[Union[None,
     """
     Show an ascii grid of the grid produced by the show_user_grid function.
     """
-    height = len(show_grid)
     width = len(show_grid[0])
     ascii_version = '  '
     for i in range(width):
@@ -265,6 +264,8 @@ def ascii_grid(show_grid: List[List[Union[None, int]]]) -> List[List[Union[None,
 
 def get_input():
     """
+    Encapsulates logic for taking user input for height, width, and
+    the number of mines.
     """
     height = input('Height: ')
     while not (height.isdigit() or height == ''):
