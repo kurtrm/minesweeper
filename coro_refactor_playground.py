@@ -1,12 +1,14 @@
 """
 Coroutine versions of various functions in minesweeper.py.
 """
-from coro_decorator import coroutine_primer
+from coro_decorator import coroutine_primer, catch_stopiter
 
 
 # def _valid_parameters(height, width, mines) -> bool:
 #     """
-#     Validate the inputs into the initialize_grid function.
+#     After get_input() validates user input, this function
+#     takes those inputs and ensures they are valid within
+#     game constraints.
 #     """
 #     if height < 8 or width < 8:
 #         print('Height/width must be greater than or equal to 8.')
@@ -26,8 +28,8 @@ from coro_decorator import coroutine_primer
 
 # def get_input():
 #     """
-#     Encapsulates logic for taking user input for height, width, and
-#     the number of mines.
+#     This function validates literal user input. It does not ensure
+#     input is valid within game constraints.
 #     """
 #     height = input('Height: ')
 #     while not (height.isdigit() or height == ''):
@@ -48,7 +50,7 @@ from coro_decorator import coroutine_primer
 #     return height, width, mines
 
 
-@coroutine_primer
+# @coroutine_primer
 def _valid_parameters():
     """
     """
@@ -90,6 +92,20 @@ def _valid_parameters():
 
         if mines >= height * width:
             print('Number of mines must be less than the number of available spaces.')
+        elif mines < 0:
+            print('Number of mines should be a positive integer.')
         else:
             break
-    yield height, width, mines
+
+    return height, width, mines
+
+
+@catch_stopiter
+def pipe_input():
+    """
+    Though this is only intended to run once, wrapping it in a while loop will
+    prevent raising a StopIteration, and this delegating subgenerator will remain
+    available to receive inputs.
+    """
+    values = yield from _valid_parameters()
+    return values
